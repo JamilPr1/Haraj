@@ -18,7 +18,15 @@ try:
     
     # Import dashboard app with error handling
     try:
+        # Import with error suppression for cleaner logs
+        import warnings
+        warnings.filterwarnings('ignore')
+        
         from dashboard import app
+        
+        # Verify app is a Flask instance
+        if not hasattr(app, 'route'):
+            raise ValueError("Imported 'app' is not a Flask application")
         
         # Export the app for Vercel (Vercel looks for 'app' variable)
         # This is the Flask WSGI application

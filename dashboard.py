@@ -159,13 +159,28 @@ def get_listings_stats(listings):
     
     return stats
 
+@app.route('/health')
+def health():
+    """Health check endpoint for Vercel"""
+    return jsonify({
+        'status': 'ok',
+        'base_dir': str(BASE_DIR),
+        'data_dir': str(DATA_DIR),
+        'template_dir': str(_template_dir)
+    }), 200
+
 @app.route('/')
 def index():
     """Main dashboard page"""
-    listings = load_listings()
-    stats = get_listings_stats(listings)
-    config = load_config()
-    return render_template('dashboard.html', listings=listings, stats=stats, config=config)
+    try:
+        listings = load_listings()
+        stats = get_listings_stats(listings)
+        config = load_config()
+        return render_template('dashboard.html', listings=listings, stats=stats, config=config)
+    except Exception as e:
+        import traceback
+        error_msg = f"Error loading dashboard: {str(e)}\n\n{traceback.format_exc()}"
+        return error_msg, 500
 
 @app.route('/api/listings')
 def api_listings():
