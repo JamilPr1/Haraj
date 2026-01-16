@@ -501,28 +501,49 @@
             return false; // Prevent any form submission
         }
         
-        // Also attach event listener to prevent any form submission
+        // Attach event listeners to prevent any form submission or page refresh
         document.addEventListener('DOMContentLoaded', function() {
             const startBtn = document.getElementById('startScrapingBtn');
             const stopBtn = document.getElementById('stopScrapingBtn');
             
             if (startBtn) {
+                // Remove any existing onclick handlers to avoid conflicts
+                startBtn.setAttribute('onclick', '');
+                
+                // Add event listener with capture phase
                 startBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
+                    e.stopImmediatePropagation();
                     startScraping(e);
                     return false;
-                });
+                }, true);
             }
             
             if (stopBtn) {
+                // Remove any existing onclick handlers to avoid conflicts
+                stopBtn.setAttribute('onclick', '');
+                
+                // Add event listener with capture phase
                 stopBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
+                    e.stopImmediatePropagation();
                     stopScraping(e);
                     return false;
-                });
+                }, true);
             }
+            
+            // Prevent any form submission that might contain these buttons
+            document.addEventListener('submit', function(e) {
+                const form = e.target;
+                if (form && (form.contains(startBtn) || form.contains(stopBtn))) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    return false;
+                }
+            }, true);
         });
 
         function stopScraping(event) {
