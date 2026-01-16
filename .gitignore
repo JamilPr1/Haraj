@@ -60,6 +60,9 @@ Thumbs.db
 scraper_config.json
 !example_*.json
 
+# Vercel
+.vercel
+
 # Selenium
 chromedriver
 geckodriver

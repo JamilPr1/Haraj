@@ -14,8 +14,14 @@ import sys
 
 app = Flask(__name__)
 
-# Get the directory where this script is located (works in production)
-BASE_DIR = Path(__file__).parent.absolute()
+# Get the directory where this script is located (works in production and Vercel)
+# In Vercel, __file__ might be in api/ directory, so we need to handle that
+_script_dir = Path(__file__).parent.absolute()
+# If we're in api/ directory (Vercel), go up one level
+if _script_dir.name == 'api':
+    BASE_DIR = _script_dir.parent.absolute()
+else:
+    BASE_DIR = _script_dir
 
 # Default data directory (relative to script location)
 DATA_DIR = BASE_DIR / "scraped_data"
