@@ -132,17 +132,22 @@ class HarajScraperSelenium:
                 try:
                     # Make executable
                     os.chmod(path, 0o755)
-                    # Test if it works (quick test)
-                    service = Service(path)
-                    test_driver = webdriver.Chrome(service=service, options=chrome_options)
-                    test_driver.quit()
-                    # If we get here, it works
+                    # Test if it works (quick test) - but don't fail if test fails, just try to use it
+                    try:
+                        service = Service(path)
+                        test_driver = webdriver.Chrome(service=service, options=chrome_options)
+                        test_driver.quit()
+                        print(f"ChromeDriver at {path} passed test")
+                    except Exception as test_error:
+                        print(f"ChromeDriver at {path} test failed, but will try to use it anyway: {test_error}")
+                    
+                    # Use this driver (even if test failed, it might work in actual use)
                     driver_path = path
                     driver_found = True
                     print(f"Using system ChromeDriver at: {path}")
                     break
-                except Exception as test_error:
-                    print(f"ChromeDriver at {path} failed test: {test_error}")
+                except Exception as path_error:
+                    print(f"Error with ChromeDriver at {path}: {path_error}")
                     continue
         
         # If system chromedriver not found, use webdriver-manager
