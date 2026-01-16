@@ -445,7 +445,13 @@
     <script>
         let statusInterval;
 
-        function startScraping() {
+        function startScraping(event) {
+            // Prevent any default form submission
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
             const maxListings = document.getElementById('max_listings').value;
             const startBtn = document.getElementById('startScrapingBtn');
             const stopBtn = document.getElementById('stopScrapingBtn');
@@ -465,7 +471,12 @@
                 },
                 body: JSON.stringify({ max_listings: parseInt(maxListings), category_url: 'https://haraj.com.sa/tags/حراج السيارات' }),
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => Promise.reject(err));
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.error) {
                     alert('خطأ: ' + data.error);
@@ -478,11 +489,14 @@
             })
             .catch(error => {
                 console.error('Error starting scraping:', error);
-                alert('فشل بدء الاستخراج.');
+                const errorMsg = error.error || error.message || 'فشل بدء الاستخراج.';
+                alert('خطأ: ' + errorMsg);
                 startBtn.disabled = false;
                 stopBtn.style.display = 'none';
                 statusDiv.style.display = 'none';
             });
+            
+            return false; // Prevent any form submission
         }
 
         function stopScraping() {
