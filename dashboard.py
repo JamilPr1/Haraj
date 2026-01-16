@@ -290,19 +290,33 @@ def run_scraper(max_listings, category_url):
         username = config.get('username', '') or None
         password = config.get('password', '') or None
         
-        scraper = HarajScraperSelenium(
-            output_dir="scraped_data",
-            download_images=False,
-            headless=True,
-            username=username,
-            password=password
-        )
+        try:
+            scraper = HarajScraperSelenium(
+                output_dir="scraped_data",
+                download_images=False,
+                headless=True,
+                username=username,
+                password=password
+            )
+        except Exception as e:
+            scraping_status['error'] = f"Failed to initialize scraper: {str(e)}"
+            scraping_status['is_running'] = False
+            return
         
         try:
             # Find listing URLs first
             scraping_status['current_listing'] = 'Finding listings...'
-            listing_urls = scraper.find_listing_urls(category_url, max_pages=10)
-            listing_urls = listing_urls[:max_listings]
+            try:
+                listing_urls = scraper.find_listing_urls(category_url, max_pages=10)
+                listing_urls = listing_urls[:max_listings]
+            except Exception as e:
+                scraping_status['error'] = f"Failed to find listings: {str(e)}"
+                scraping_status['is_running'] = False
+                try:
+                    scraper.close()
+                except:
+                    pass
+                return
             
             scraping_status['total'] = len(listing_urls)
             scraping_status['current_listing'] = f'Found {len(listing_urls)} listings. Starting to scrape...'
@@ -325,8 +339,11 @@ def run_scraper(max_listings, category_url):
             
             if all_listings:
                 scraping_status['current_listing'] = 'Saving data...'
-                scraper.save_to_json(all_listings, "listings.json")
-                scraper.save_to_csv(all_listings, "listings.csv")
+                try:
+                    scraper.save_to_json(all_listings, "listings.json")
+                    scraper.save_to_csv(all_listings, "listings.csv")
+                except Exception as e:
+                    scraping_status['error'] = f"Failed to save data: {str(e)}"
                 scraping_status['progress'] = len(listing_urls)
                 scraping_status['current_listing'] = f'Completed! Scraped {len(all_listings)} listings'
             else:
@@ -335,7 +352,10 @@ def run_scraper(max_listings, category_url):
                 else:
                     scraping_status['error'] = f"No listing URLs found. The website structure may have changed or the category URL is invalid: {category_url}"
         finally:
-            scraper.close()
+            try:
+                scraper.close()
+            except:
+                pass
             
     except Exception as e:
         scraping_status['error'] = str(e)
