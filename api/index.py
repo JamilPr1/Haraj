@@ -35,7 +35,9 @@ try:
         @error_app.route('/')
         @error_app.route('/<path:path>')
         def error_handler(path=''):
-            return f"Error importing dashboard: {str(e)}", 500
+            import traceback
+            error_details = traceback.format_exc()
+            return f"Error importing dashboard: {str(e)}\n\nTraceback:\n{error_details}", 500
         
         application = error_app
         app = error_app
@@ -48,7 +50,9 @@ except Exception as e:
     @fallback_app.route('/')
     @fallback_app.route('/<path:path>')
     def fallback_handler(path=''):
-        return f"Serverless function error: {str(e)}", 500
+        import traceback
+        error_details = traceback.format_exc()
+        return f"Serverless function error: {str(e)}\n\nTraceback:\n{error_details}", 500
     
     application = fallback_app
     app = fallback_app
