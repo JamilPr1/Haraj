@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["python39", "chromium"]
+nixPkgs = ["python39", "chromium", "chromedriver", "libnss3", "libatk-bridge2.0-0", "libx11-xcb1", "libgbm1"]
 
 [phases.install]
 cmds = []
