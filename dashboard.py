@@ -357,7 +357,14 @@ def run_scraper(max_listings, category_url):
                 password=password
             )
         except Exception as e:
-            scraping_status['error'] = f"Failed to initialize scraper: {str(e)}"
+            error_msg = str(e)
+            # Provide more helpful error message for ChromeDriver issues
+            if "Status code was: 127" in error_msg or "chromedriver" in error_msg.lower():
+                scraping_status['error'] = f"ChromeDriver initialization failed: {error_msg}\n\n" \
+                    "This usually means Chrome/ChromeDriver is not installed on the server.\n" \
+                    "Please check Railway build logs to ensure Chrome and ChromeDriver are installed."
+            else:
+                scraping_status['error'] = f"Failed to initialize scraper: {error_msg}"
             scraping_status['is_running'] = False
             return
         
