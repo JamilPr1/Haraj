@@ -569,7 +569,13 @@
                     document.getElementById('startScrapingBtn').disabled = false;
                     document.getElementById('stopScrapingBtn').style.display = 'none';
                     document.getElementById('scrapingStatus').style.display = 'none';
-                    location.reload();
+                    // Only reload if scraping completed successfully (not on error)
+                    if (!data.error && data.progress > 0) {
+                        // Small delay before reload to show completion message
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                    }
                 }
             })
             .catch(error => {

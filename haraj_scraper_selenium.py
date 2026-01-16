@@ -197,15 +197,26 @@ class HarajScraperSelenium:
                         raise Exception(f"ChromeDriver at {driver_path} is not executable even after chmod")
                     
                     # Try to verify it can run (check if it's a valid binary)
+                    # This will fail with status 127 if shared libraries are missing, but we'll catch it
                     try:
                         import subprocess
                         result = subprocess.run([driver_path, '--version'], 
                                               capture_output=True, 
                                               timeout=5,
-                                              stderr=subprocess.DEVNULL)
+                                              stderr=subprocess.PIPE)
                         if result.returncode != 0:
+                            # Check if it's a missing library error
+                            error_output = result.stderr.decode('utf-8', errors='ignore') if result.stderr else ''
+                            if 'not found' in error_output.lower() or result.returncode == 127:
+                                raise Exception(f"ChromeDriver missing shared libraries. Error: {error_output}")
                             print(f"Warning: ChromeDriver version check failed, but continuing...")
+                    except subprocess.TimeoutExpired:
+                        print(f"Warning: ChromeDriver version check timed out")
                     except Exception as version_check_error:
+                        error_str = str(version_check_error)
+                        if '127' in error_str or 'not found' in error_str.lower() or 'missing' in error_str.lower():
+                            # This is a dependency issue - raise it so we can provide better error
+                            raise Exception(f"ChromeDriver cannot execute due to missing dependencies: {error_str}")
                         print(f"Warning: Could not verify ChromeDriver version: {version_check_error}")
                     
                     driver_found = True
