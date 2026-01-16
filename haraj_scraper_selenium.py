@@ -152,10 +152,17 @@ class HarajScraperSelenium:
         
         # If system chromedriver not found, use webdriver-manager
         if not driver_found:
+            print("=" * 70)
+            print("WARNING: System ChromeDriver not found!")
+            print("This will use webdriver-manager which may have dependency issues.")
+            print("Make sure 'chromedriver' is in nixpacks.toml nixPkgs list.")
+            print("Checked paths:")
+            for p in chromedriver_paths[:10]:  # Show first 10
+                exists = "✓" if os.path.exists(p) else "✗"
+                print(f"  {exists} {p}")
+            print("=" * 70)
+            
             try:
-                print("System ChromeDriver not found, using webdriver-manager...")
-                print("WARNING: webdriver-manager ChromeDriver may have dependency issues on Railway.")
-                print("Make sure chromedriver is in nixpacks.toml nixPkgs list.")
                 
                 driver_path = ChromeDriverManager().install()
                 # Make sure driver is executable (important for Linux)
