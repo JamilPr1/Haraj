@@ -150,13 +150,62 @@ def get_listings_stats(listings):
 
 @app.route('/health')
 def health():
-    """Health check endpoint for Vercel"""
+    """Health check endpoint"""
     return jsonify({
         'status': 'ok',
         'base_dir': str(BASE_DIR),
         'data_dir': str(DATA_DIR),
         'template_dir': str(_template_dir)
     }), 200
+
+@app.route('/api/chromedriver-check')
+def chromedriver_check():
+    """Check ChromeDriver availability for debugging"""
+    import shutil
+    import glob
+    import os
+    
+    results = {
+        'system_chromedriver': None,
+        'nix_store_chromedrivers': [],
+        'standard_locations': {},
+        'chromium_found': False,
+        'chromium_path': None
+    }
+    
+    # Check PATH
+    system_chromedriver = shutil.which('chromedriver')
+    if system_chromedriver:
+        results['system_chromedriver'] = system_chromedriver
+        results['system_chromedriver_exists'] = os.path.exists(system_chromedriver)
+        results['system_chromedriver_executable'] = os.access(system_chromedriver, os.X_OK) if system_chromedriver else False
+    
+    # Check nix store
+    nix_matches = glob.glob('/nix/store/*/bin/chromedriver')
+    results['nix_store_chromedrivers'] = nix_matches[:5]  # Limit to first 5
+    
+    # Check standard locations
+    standard_paths = ['/usr/bin/chromedriver', '/usr/local/bin/chromedriver', '/opt/chromedriver/chromedriver']
+    for path in standard_paths:
+        results['standard_locations'][path] = {
+            'exists': os.path.exists(path),
+            'executable': os.access(path, os.X_OK) if os.path.exists(path) else False
+        }
+    
+    # Check for Chromium
+    chromium_paths = [
+        shutil.which('chromium'),
+        shutil.which('chromium-browser'),
+        '/usr/bin/chromium',
+        '/usr/bin/chromium-browser',
+    ]
+    for path in chromium_paths:
+        if path and os.path.exists(path):
+            results['chromium_found'] = True
+            results['chromium_path'] = path
+            break
+    
+    return jsonify(results), 200
 
 @app.route('/')
 def index():
