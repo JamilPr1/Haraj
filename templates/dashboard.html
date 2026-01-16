@@ -499,11 +499,22 @@
             return false; // Prevent any form submission
         }
 
-        function stopScraping() {
+        function stopScraping(event) {
+            // Prevent any default form submission
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
             fetch('/api/stop-scraping', {
                 method: 'POST',
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => Promise.reject(err));
+                }
+                return response.json();
+            })
             .then(data => {
                 alert(data.message);
                 if (!data.status.is_running) {
@@ -518,6 +529,8 @@
                 console.error('Error stopping scraping:', error);
                 alert('فشل إيقاف الاستخراج.');
             });
+            
+            return false; // Prevent any form submission
         }
 
         function updateScrapingStatus() {
