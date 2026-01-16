@@ -62,27 +62,35 @@ class HarajScraperSelenium:
         chrome_options.add_argument('--lang=ar,en')
         
         # For Railway/Linux environments, try to use system Chrome if available
-        # Nixpacks installs Chromium, so check for it first
+        # Check for Chrome/Chromium in standard locations (Dockerfile installs to /usr/bin)
+        chrome_binary_paths = [
+            '/usr/bin/google-chrome-stable',  # Dockerfile installs here
+            '/usr/bin/google-chrome',
+            '/usr/bin/chromium',
+            '/usr/bin/chromium-browser',
+        ]
+        
+        # Also check PATH
+        chrome_in_path = shutil.which('google-chrome-stable') or shutil.which('google-chrome') or shutil.which('chromium')
+        if chrome_in_path:
+            chrome_binary_paths.insert(0, chrome_in_path)
+        
+        # Check nix store (if using nixpacks)
         if os.path.exists('/nix/store'):
-            # Nix environment - try to find chromium in nix store
             import subprocess
             try:
                 chromium_path = subprocess.check_output(['which', 'chromium'], stderr=subprocess.DEVNULL).decode().strip()
                 if chromium_path:
-                    chrome_options.binary_location = chromium_path
+                    chrome_binary_paths.insert(0, chromium_path)
             except:
                 pass
         
-        # Fallback to standard locations
-        if not chrome_options.binary_location:
-            if os.path.exists('/usr/bin/google-chrome'):
-                chrome_options.binary_location = '/usr/bin/google-chrome'
-            elif os.path.exists('/usr/bin/google-chrome-stable'):
-                chrome_options.binary_location = '/usr/bin/google-chrome-stable'
-            elif os.path.exists('/usr/bin/chromium'):
-                chrome_options.binary_location = '/usr/bin/chromium'
-            elif os.path.exists('/usr/bin/chromium-browser'):
-                chrome_options.binary_location = '/usr/bin/chromium-browser'
+        # Set Chrome binary location
+        for chrome_path in chrome_binary_paths:
+            if chrome_path and os.path.exists(chrome_path):
+                chrome_options.binary_location = chrome_path
+                print(f"Using Chrome binary at: {chrome_path}")
+                break
         
         # User agents for rotation (ToS compliance)
         self.user_agents = [
