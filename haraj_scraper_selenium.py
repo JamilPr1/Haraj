@@ -163,11 +163,14 @@ class HarajScraperSelenium:
             print("=" * 70)
             print("WARNING: System ChromeDriver not found!")
             print("This will use webdriver-manager which may have dependency issues.")
-            print("Make sure 'chromedriver' is in nixpacks.toml nixPkgs list.")
+            print("Make sure Chrome and ChromeDriver are installed.")
             print("Checked paths:")
             for p in chromedriver_paths[:10]:  # Show first 10
                 exists = "✓" if os.path.exists(p) else "✗"
                 print(f"  {exists} {p}")
+            print("=" * 70)
+            print("Attempting to use webdriver-manager ChromeDriver...")
+            print("NOTE: This may fail with status code 127 if shared libraries are missing.")
             print("=" * 70)
             
             try:
